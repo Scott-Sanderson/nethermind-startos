@@ -593,10 +593,10 @@ export const main = sdk.setupMain(async ({ effects }) =>
                 message:
                   minorWarnings15m > 0
                     ? i18n(
-                        'Logs look clean (${count} minor sync notice(s) in last 15m)',
+                        'No issues detected (${count} minor sync notice(s) in last 15m)',
                         { count: String(minorWarnings15m) },
                       )
-                    : i18n('Logs look clean'),
+                    : i18n('No issues detected'),
               }
             }
             const message = formatLogIssue(topIssue)

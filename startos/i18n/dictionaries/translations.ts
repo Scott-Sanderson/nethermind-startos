@@ -72,8 +72,8 @@ export default {
     67: 'Sincronizando nodos de estado • Cabecera ${header} / ${target}',
     68: 'Sincronizado en el bloque ${block}',
     69: 'Estado de registros',
-    70: 'Los registros se ven limpios (${count} aviso(s) menor(es) en los últimos 15 min)',
-    71: 'Los registros se ven limpios',
+    70: 'No se detectaron problemas (${count} aviso(s) menor(es) en los últimos 15 min)',
+    71: 'No se detectaron problemas',
   },
   de_DE: {
     0: 'Wallet-RPC',
@@ -146,8 +146,8 @@ export default {
     67: 'Synchronisiere Zustandsknoten • Header ${header} / ${target}',
     68: 'Synchronisiert bei Block ${block}',
     69: 'Protokollstatus',
-    70: 'Protokolle sehen sauber aus (${count} kleinere Sync-Hinweise in den letzten 15 Min.)',
-    71: 'Protokolle sehen sauber aus',
+    70: 'Keine Probleme erkannt (${count} kleinere Sync-Hinweise in den letzten 15 Min.)',
+    71: 'Keine Probleme erkannt',
   },
   pl_PL: {
     0: 'Wallet RPC',
@@ -220,8 +220,8 @@ export default {
     67: 'Synchronizacja węzłów stanu • Nagłówek ${header} / ${target}',
     68: 'Zsynchronizowano na bloku ${block}',
     69: 'Stan logów',
-    70: 'Logi wyglądają czysto (${count} drobne komunikaty sync w ostatnich 15 min)',
-    71: 'Logi wyglądają czysto',
+    70: 'Nie wykryto problemów (${count} drobne komunikaty sync w ostatnich 15 min)',
+    71: 'Nie wykryto problemów',
   },
   fr_FR: {
     0: 'RPC de portefeuille',
@@ -294,7 +294,7 @@ export default {
     67: 'Synchronisation des nœuds d’état • En-tête ${header} / ${target}',
     68: 'Synchronisé au bloc ${block}',
     69: 'Santé des journaux',
-    70: 'Les journaux semblent sains (${count} avis mineur(s) de synchro en 15 min)',
-    71: 'Les journaux semblent sains',
+    70: 'Aucun problème détecté (${count} avis mineur(s) de synchro en 15 min)',
+    71: 'Aucun problème détecté',
   },
 } satisfies Record<string, LangDict>

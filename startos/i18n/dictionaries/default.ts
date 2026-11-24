@@ -71,8 +71,8 @@ const dict = {
   'Syncing state nodes • Header ${header} / ${target}': 67,
   'Synced at block ${block}': 68,
   'Log Health': 69,
-  'Logs look clean (${count} minor sync notice(s) in last 15m)': 70,
-  'Logs look clean': 71,
+  'No issues detected (${count} minor sync notice(s) in last 15m)': 70,
+  'No issues detected': 71,
 } as const
 
 export type I18nKey = keyof typeof dict
