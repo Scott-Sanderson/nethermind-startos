@@ -1,18 +1,18 @@
 import { IMPOSSIBLE, VersionInfo } from '@start9labs/start-sdk'
 
 export const current = VersionInfo.of({
-  version: '2.2.2:4',
+  version: '2.2.2:0',
   releaseNotes: {
     en_US:
-      'Add richer Execution Sync progress (phase percentages, ETAs, DB clearing elapsed time, header/target blocks, and synced block height) and an automated Log Health check with rate-limited critical alerts.',
+      'Initial StartOS release of Nethermind for Ethereum Mainnet with shared-volume storage, RAM- and disk-aware tuning, gateway-consistent peer monitoring, detailed sync progress, and automated log health alerts.',
     es_ES:
-      'Añade progreso detallado en Sincronización de ejecución (porcentajes por fase, tiempo estimado, limpieza de BD, bloques cabecera/objetivo y bloque sincronizado) y una comprobación automática de Estado de registros con alertas críticas.',
+      'Lanzamiento inicial en StartOS de Nethermind para Ethereum Mainnet con almacenamiento en volúmenes compartidos, ajuste según RAM y disco, supervisión de pasarela de pares, progreso detallado de sincronización y alertas automáticas de registros.',
     de_DE:
-      'Fügt detaillierteren Synchronisierungsfortschritt (Phasenprozente, Restzeit, DB-Bereinigung, Header-/Zielblöcke und synchronisierten Block) sowie eine automatische Protokollstatus-Prüfung mit kritischen Benachrichtigungen hinzu.',
+      'Erste StartOS-Version von Nethermind für Ethereum Mainnet mit gemeinsam genutztem Speicher, RAM- und speicherbewusster Abstimmung, Peer-Gateway-Prüfung, detailliertem Synchronisierungsfortschritt und automatischer Protokollüberwachung.',
     pl_PL:
-      'Dodaje szczegółowy postęp Synchronizacji wykonawczej (procenty faz, szacowany czas, czyszczenie bazy, bloki nagłówka/docelowy i zsynchronizowany blok) oraz automatyczną kontrolę Stanu logów z powiadomieniami krytycznymi.',
+      'Pierwsze wydanie Nethermind dla Ethereum Mainnet w StartOS z obsługą wolumenów współdzielonych, dostrajaniem do RAM i dysku, kontrolą bramy peerów, szczegółowym postępem synchronizacji i automatycznym monitorowaniem logów.',
     fr_FR:
-      'Ajoute une progression détaillée de Synchronisation d’exécution (pourcentages par phase, temps restant, nettoyage de la base, blocs en-tête/cible et bloc synchronisé) ainsi qu’un contrôle Santé des journaux avec alertes critiques.',
+      'Première version StartOS de Nethermind pour Ethereum Mainnet avec stockage sur volumes partagés, réglage adapté à la RAM et au disque, suivi de passerelle des pairs, progression détaillée de la synchronisation et surveillance automatique des journaux.',
   },
   migrations: { up: async () => {}, down: IMPOSSIBLE },
 })
