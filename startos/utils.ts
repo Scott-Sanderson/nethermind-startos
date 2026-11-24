@@ -428,12 +428,19 @@ export class LogMonitor {
       return
     }
 
-    if (/OutOfMemoryException|Cannot allocate memory|\bOOM\b/i.test(clean)) {
+    const isError = isAnsiError || EXPLICIT_ERROR_RE.test(clean)
+    const isWarnOrError = isError || isAnsiWarn
+
+    if (
+      isWarnOrError &&
+      /OutOfMemoryException|Cannot allocate memory|\bOOM\b/i.test(clean)
+    ) {
       this.recordIssue('oom', 'critical', clean, now, true)
       return
     }
 
     if (
+      isWarnOrError &&
       /No space left on device|RocksDbException|Corruption:|IOException.*(?:disk|space|read|write)/i.test(
         clean,
       )
@@ -443,7 +450,8 @@ export class LogMonitor {
     }
 
     if (
-      /JWT.*(?:invalid|failed|mismatch|expired|error)|Authentication.*JWT|Engine.*401|Unauthorized.*Engine/i.test(
+      isWarnOrError &&
+      /(?:JWT|authentication|Engine).*(?:invalid|failed|mismatch|expired|unauthorized|rejected|401)/i.test(
         clean,
       )
     ) {
@@ -451,12 +459,16 @@ export class LogMonitor {
       return
     }
 
-    if (/clock.*skew|system time|timestamp.*in the future/i.test(clean)) {
+    if (
+      isWarnOrError &&
+      /clock.*skew|system time.*(?:incorrect|drift|skew)|timestamp.*in the future/i.test(
+        clean,
+      )
+    ) {
       this.recordIssue('clock-skew', 'critical', clean, now, true)
       return
     }
 
-    const isError = isAnsiError || EXPLICIT_ERROR_RE.test(clean)
     const isFatal = EXPLICIT_FATAL_RE.test(clean)
     if (isError) {
       this.errorTimestamps.push(now)
