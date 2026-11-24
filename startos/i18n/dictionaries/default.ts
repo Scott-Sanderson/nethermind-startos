@@ -57,6 +57,7 @@ const dict = {
   '${free} free of ${total} (low — state pruning needs at least 250 GiB free)': 53,
   '${free} free of ${total}': 54,
   'Checking disk space': 55,
+  'Syncing state (target block ${highest})': 56,
 } as const
 
 export type I18nKey = keyof typeof dict

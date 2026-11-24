@@ -58,6 +58,7 @@ export default {
     53: '${free} libres de ${total} (bajo — la poda de estado necesita al menos 250 GiB libres)',
     54: '${free} libres de ${total}',
     55: 'Comprobando espacio en disco',
+    56: 'Sincronizando estado (bloque objetivo ${highest})',
   },
   de_DE: {
     0: 'Wallet-RPC',
@@ -116,6 +117,7 @@ export default {
     53: '${free} frei von ${total} (niedrig — State-Pruning benötigt mindestens 250 GiB frei)',
     54: '${free} frei von ${total}',
     55: 'Prüfe Speicherplatz',
+    56: 'Synchronisiere Zustand (Zielblock ${highest})',
   },
   pl_PL: {
     0: 'Wallet RPC',
@@ -174,6 +176,7 @@ export default {
     53: 'Wolne ${free} z ${total} (mało — przycinanie stanu wymaga co najmniej 250 GiB wolnego miejsca)',
     54: 'Wolne ${free} z ${total}',
     55: 'Sprawdzanie miejsca na dysku',
+    56: 'Synchronizacja stanu (docelowy blok ${highest})',
   },
   fr_FR: {
     0: 'RPC de portefeuille',
@@ -232,5 +235,6 @@ export default {
     53: '${free} libres sur ${total} (faible — l’élagage d’état nécessite au moins 250 Gio libres)',
     54: '${free} libres sur ${total}',
     55: 'Vérification de l’espace disque',
+    56: 'Synchronisation de l’état (bloc cible ${highest})',
   },
 } satisfies Record<string, LangDict>

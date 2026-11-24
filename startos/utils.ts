@@ -120,3 +120,89 @@ export function formatStorageSize(bytes: number): string {
   if (bytes >= TiB) return `${(bytes / TiB).toFixed(2)} TiB`
   return `${(bytes / GiB).toFixed(1)} GiB`
 }
+
+const ANSI_RE = /\x1b\[[0-9;]*m/g
+const SNAP_PROGRESS_RE = /\|\s*Snap\s+([^:]+?):\s*\(\s*([\d.]+)\s*%\s*\)/i
+const PHASE_PROGRESS_RE =
+  /\|\s*(Old Headers|Old Bodies|Old Receipts|Beacon Headers)\s+[\d,]+\s*\/\s*[\d,]+\s*\(\s*([\d.]+)\s*%\s*\)/i
+
+export function parseSyncProgressLine(
+  rawLine: string,
+): { key: string; label: string; percent: number } | null {
+  const line = rawLine.replace(ANSI_RE, '')
+  const snap = SNAP_PROGRESS_RE.exec(line)
+  if (snap) {
+    const pct = Number(snap[2])
+    if (!Number.isFinite(pct)) return null
+    const detail = snap[1].trim().replace(/\s+/g, ' ')
+    return {
+      key: 'snap',
+      label: `Snap (${detail})`,
+      percent: Math.min(100, Math.max(0, pct)),
+    }
+  }
+  const phase = PHASE_PROGRESS_RE.exec(line)
+  if (phase) {
+    const pct = Number(phase[2])
+    if (!Number.isFinite(pct)) return null
+    const name = phase[1].trim()
+    return {
+      key: name.toLowerCase(),
+      label: name,
+      percent: Math.min(100, Math.max(0, pct)),
+    }
+  }
+  return null
+}
+
+/**
+ * Tracks live Nethermind sync progress lines (Snap, Old Headers, Old Bodies,
+ * Old Receipts, Beacon Headers) from stdout so the health check can report
+ * real percentages even while `eth_syncing` reports `currentBlock: 0x0`.
+ */
+export class SyncProgressTracker {
+  private readonly phases = new Map<
+    string,
+    { label: string; percent: number; updatedAt: number }
+  >()
+  private partial = ''
+
+  feed(chunk: Buffer | string): void {
+    const text = this.partial + chunk.toString()
+    const lines = text.split(/\r?\n/)
+    this.partial = lines.pop() ?? ''
+    const now = Date.now()
+    for (const line of lines) {
+      const parsed = parseSyncProgressLine(line)
+      if (parsed) {
+        this.phases.set(parsed.key, {
+          label: parsed.label,
+          percent: parsed.percent,
+          updatedAt: now,
+        })
+      }
+    }
+  }
+
+  clear(): void {
+    this.phases.clear()
+  }
+
+  summary(maxAgeMs = 90_000): string | null {
+    const now = Date.now()
+    const active: { key: string; label: string; percent: number }[] = []
+    for (const [key, entry] of this.phases) {
+      if (now - entry.updatedAt <= maxAgeMs) {
+        active.push({ key, label: entry.label, percent: entry.percent })
+      } else {
+        this.phases.delete(key)
+      }
+    }
+    if (active.length === 0) return null
+    // Show Snap first when running concurrently with Old Headers.
+    active.sort((a, b) =>
+      a.key === 'snap' ? -1 : b.key === 'snap' ? 1 : a.key.localeCompare(b.key),
+    )
+    return active.map((p) => `${p.label}: ${p.percent.toFixed(1)}%`).join(' | ')
+  }
+}

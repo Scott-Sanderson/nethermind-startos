@@ -8,6 +8,7 @@ import {
   LOCAL_STORAGE_ID,
   PEER_HOST_ID,
   WALLET_RPC_PORT,
+  SyncProgressTracker,
   asObject,
   computeMemoryBudget,
   formatStorageSize,
@@ -147,6 +148,7 @@ export const main = sdk.setupMain(async ({ effects }) =>
       mounts,
       'nethermind',
     )
+    const syncProgress = new SyncProgressTracker()
     const history =
       config.history === 'rolling'
         ? ['--History.Pruning=Rolling', '--History.RetentionEpochs=33024']
@@ -197,6 +199,14 @@ export const main = sdk.setupMain(async ({ effects }) =>
             '--JsonRpc.JwtSecretFile=/run/engine-auth/jwt.hex',
             ...history,
           ],
+          onStdout: (chunk) => {
+            process.stdout.write(chunk)
+            syncProgress.feed(chunk)
+          },
+          onStderr: (chunk) => {
+            process.stderr.write(chunk)
+            syncProgress.feed(chunk)
+          },
           // Give RocksDB time to flush memtables cleanly on stop/restart.
           sigtermTimeout: 120_000,
         },
@@ -216,6 +226,7 @@ export const main = sdk.setupMain(async ({ effects }) =>
           display: i18n('Execution Sync'),
           trigger: sdk.trigger.statusTrigger(30_000, {
             starting: 5_000,
+            loading: 10_000,
             failure: 10_000,
           }),
           fn: async () => {
@@ -232,7 +243,19 @@ export const main = sdk.setupMain(async ({ effects }) =>
                     waiting: true,
                     message: i18n('Execution is ready; waiting for consensus'),
                   }
-                if (current !== null && highest !== null && highest > 0) {
+                const logSummary = syncProgress.summary()
+                if (logSummary) {
+                  return {
+                    result: 'loading',
+                    message: logSummary,
+                  }
+                }
+                if (
+                  current !== null &&
+                  highest !== null &&
+                  current > 0 &&
+                  highest > 0
+                ) {
                   const pct = Math.min(100, (current / highest) * 100).toFixed(
                     1,
                   )
@@ -246,6 +269,14 @@ export const main = sdk.setupMain(async ({ effects }) =>
                         percentage: pct,
                       },
                     ),
+                  }
+                }
+                if (highest !== null && highest > 0) {
+                  return {
+                    result: 'loading',
+                    message: i18n('Syncing state (target block ${highest})', {
+                      highest: highest.toLocaleString('en-US'),
+                    }),
                   }
                 }
                 return {
@@ -265,6 +296,7 @@ export const main = sdk.setupMain(async ({ effects }) =>
                   waiting: true,
                   message: i18n('Execution is ready; waiting for consensus'),
                 }
+              syncProgress.clear()
               return { result: 'success', message: i18n('Execution is synced') }
             } catch {
               return {
