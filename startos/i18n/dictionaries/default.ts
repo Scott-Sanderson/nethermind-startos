@@ -58,6 +58,21 @@ const dict = {
   '${free} free of ${total}': 54,
   'Checking disk space': 55,
   'Syncing state (target block ${highest})': 56,
+  'Out of memory detected. Stop other heavy services or lower Maximum execution peers in Settings.': 57,
+  'Storage or database error detected. Check Disk Space and drive health before restarting.': 58,
+  'Consensus client authentication (JWT) failed. Restart your consensus client (e.g. Nimbus).': 59,
+  'System clock mismatch detected. Check your server time and network settings.': 60,
+  'No updates from your consensus client (e.g. Nimbus). Check that it is running and connected.': 61,
+  'Snap sync restarted from scratch after an earlier stop. Avoid restarting Nethermind until sync completes.': 62,
+  '${count} error(s) in the last 15m — latest: ${snippet}': 63,
+  'Nethermind Log Alert': 64,
+  'Preparing Snap Sync: clearing previous state DB (${elapsed})': 65,
+  'Syncing state nodes (pivot ${pivot}) • Header ${header} / ${target}': 66,
+  'Syncing state nodes • Header ${header} / ${target}': 67,
+  'Synced at block ${block}': 68,
+  'Log Health': 69,
+  'Logs look clean (${count} minor sync notice(s) in last 15m)': 70,
+  'Logs look clean': 71,
 } as const
 
 export type I18nKey = keyof typeof dict

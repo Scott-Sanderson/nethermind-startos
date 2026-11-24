@@ -1,18 +1,18 @@
 import { IMPOSSIBLE, VersionInfo } from '@start9labs/start-sdk'
 
 export const current = VersionInfo.of({
-  version: '2.2.2:3',
+  version: '2.2.2:4',
   releaseNotes: {
     en_US:
-      'Report live Snap Sync, Old Headers, Old Bodies, and Old Receipts percentages in Execution Sync instead of showing 0.0% while eth_syncing reports block 0.',
+      'Add richer Execution Sync progress (phase percentages, ETAs, DB clearing elapsed time, header/target blocks, and synced block height) and an automated Log Health check with rate-limited critical alerts.',
     es_ES:
-      'Muestra los porcentajes en vivo de Snap Sync, Old Headers, Old Bodies y Old Receipts en Sincronización de ejecución en lugar de 0.0% mientras eth_syncing informa el bloque 0.',
+      'Añade progreso detallado en Sincronización de ejecución (porcentajes por fase, tiempo estimado, limpieza de BD, bloques cabecera/objetivo y bloque sincronizado) y una comprobación automática de Estado de registros con alertas críticas.',
     de_DE:
-      'Zeigt Live-Prozentwerte für Snap Sync, Old Headers, Old Bodies und Old Receipts in der Ausführungs-Synchronisierung statt 0,0 %, solange eth_syncing Block 0 meldet.',
+      'Fügt detaillierteren Synchronisierungsfortschritt (Phasenprozente, Restzeit, DB-Bereinigung, Header-/Zielblöcke und synchronisierten Block) sowie eine automatische Protokollstatus-Prüfung mit kritischen Benachrichtigungen hinzu.',
     pl_PL:
-      'Pokazuje na żywo postęp Snap Sync, Old Headers, Old Bodies i Old Receipts w Synchronizacji wykonawczej zamiast 0,0%, gdy eth_syncing zwraca blok 0.',
+      'Dodaje szczegółowy postęp Synchronizacji wykonawczej (procenty faz, szacowany czas, czyszczenie bazy, bloki nagłówka/docelowy i zsynchronizowany blok) oraz automatyczną kontrolę Stanu logów z powiadomieniami krytycznymi.',
     fr_FR:
-      'Affiche les pourcentages en direct de Snap Sync, Old Headers, Old Bodies et Old Receipts dans Synchronisation d’exécution au lieu de 0,0 % tant que eth_syncing renvoie le bloc 0.',
+      'Ajoute une progression détaillée de Synchronisation d’exécution (pourcentages par phase, temps restant, nettoyage de la base, blocs en-tête/cible et bloc synchronisé) ainsi qu’un contrôle Santé des journaux avec alertes critiques.',
   },
   migrations: { up: async () => {}, down: IMPOSSIBLE },
 })

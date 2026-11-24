@@ -8,9 +8,12 @@ import {
   LOCAL_STORAGE_ID,
   PEER_HOST_ID,
   WALLET_RPC_PORT,
+  LogIssue,
+  LogMonitor,
   SyncProgressTracker,
   asObject,
   computeMemoryBudget,
+  formatDuration,
   formatStorageSize,
   parseDfBytes,
   storageReady,
@@ -37,6 +40,40 @@ function parseHexInt(value: unknown): number | null {
   if (typeof value !== 'string' || !/^0x[0-9a-f]+$/i.test(value)) return null
   const parsed = parseInt(value.slice(2), 16)
   return Number.isSafeInteger(parsed) ? parsed : null
+}
+
+function formatLogIssue(issue: LogIssue): string {
+  switch (issue.kind) {
+    case 'oom':
+      return i18n(
+        'Out of memory detected. Stop other heavy services or lower Maximum execution peers in Settings.',
+      )
+    case 'storage-error':
+      return i18n(
+        'Storage or database error detected. Check Disk Space and drive health before restarting.',
+      )
+    case 'jwt-auth':
+      return i18n(
+        'Consensus client authentication (JWT) failed. Restart your consensus client (e.g. Nimbus).',
+      )
+    case 'clock-skew':
+      return i18n(
+        'System clock mismatch detected. Check your server time and network settings.',
+      )
+    case 'consensus-silent':
+      return i18n(
+        'No updates from your consensus client (e.g. Nimbus). Check that it is running and connected.',
+      )
+    case 'snap-restarted':
+      return i18n(
+        'Snap sync restarted from scratch after an earlier stop. Avoid restarting Nethermind until sync completes.',
+      )
+    case 'error-burst':
+      return i18n('${count} error(s) in the last 15m — latest: ${snippet}', {
+        count: String(issue.count),
+        snippet: issue.snippet,
+      })
+  }
 }
 
 /**
@@ -149,6 +186,15 @@ export const main = sdk.setupMain(async ({ effects }) =>
       'nethermind',
     )
     const syncProgress = new SyncProgressTracker()
+    const logMonitor = new LogMonitor((issue) => {
+      void sdk.notification
+        .create(effects, {
+          level: issue.severity === 'critical' ? 'error' : 'warning',
+          title: i18n('Nethermind Log Alert'),
+          message: formatLogIssue(issue),
+        })
+        .catch(() => {})
+    })
     const history =
       config.history === 'rolling'
         ? ['--History.Pruning=Rolling', '--History.RetentionEpochs=33024']
@@ -202,10 +248,12 @@ export const main = sdk.setupMain(async ({ effects }) =>
           onStdout: (chunk) => {
             process.stdout.write(chunk)
             syncProgress.feed(chunk)
+            logMonitor.feed(chunk)
           },
           onStderr: (chunk) => {
             process.stderr.write(chunk)
             syncProgress.feed(chunk)
+            logMonitor.feed(chunk)
           },
           // Give RocksDB time to flush memtables cleanly on stop/restart.
           sigtermTimeout: 120_000,
@@ -243,13 +291,56 @@ export const main = sdk.setupMain(async ({ effects }) =>
                     waiting: true,
                     message: i18n('Execution is ready; waiting for consensus'),
                   }
-                const logSummary = syncProgress.summary()
-                if (logSummary) {
+
+                const snap = syncProgress.snapshot()
+                const target = highest && highest > 0 ? highest : snap.target
+
+                if (snap.phases.length > 0) {
+                  const parts = snap.phases.map((p) => {
+                    const pct = `${p.percent.toFixed(1)}%`
+                    if (p.etaMs)
+                      return `${p.label}: ${pct} (~${formatDuration(p.etaMs)} left)`
+                    if (p.currentItems && p.totalItems)
+                      return `${p.label}: ${pct} (${p.currentItems}/${p.totalItems})`
+                    return `${p.label}: ${pct}`
+                  })
+                  if (current !== null && current > 0 && target) {
+                    parts.push(
+                      `Block ${current.toLocaleString('en-US')} / ${target.toLocaleString('en-US')}`,
+                    )
+                  } else if (snap.header && target) {
+                    parts.push(
+                      `Header ${snap.header.toLocaleString('en-US')} / ${target.toLocaleString('en-US')}`,
+                    )
+                  } else if (target) {
+                    parts.push(`Target ${target.toLocaleString('en-US')}`)
+                  }
                   return {
                     result: 'loading',
-                    message: logSummary,
+                    message: parts.join(' • '),
                   }
                 }
+
+                if (snap.clearingDbSince !== null) {
+                  const elapsed = formatDuration(
+                    Date.now() - snap.clearingDbSince,
+                  )
+                  const blockCtx =
+                    snap.header && target
+                      ? ` • Header ${snap.header.toLocaleString('en-US')} / ${target.toLocaleString('en-US')}`
+                      : target
+                        ? ` • Target ${target.toLocaleString('en-US')}`
+                        : ''
+                  return {
+                    result: 'loading',
+                    message:
+                      i18n(
+                        'Preparing Snap Sync: clearing previous state DB (${elapsed})',
+                        { elapsed },
+                      ) + blockCtx,
+                  }
+                }
+
                 if (
                   current !== null &&
                   highest !== null &&
@@ -271,11 +362,33 @@ export const main = sdk.setupMain(async ({ effects }) =>
                     ),
                   }
                 }
-                if (highest !== null && highest > 0) {
+
+                if (snap.header && target) {
+                  const headerStr = snap.header.toLocaleString('en-US')
+                  const targetStr = target.toLocaleString('en-US')
+                  return {
+                    result: 'loading',
+                    message: snap.pivot
+                      ? i18n(
+                          'Syncing state nodes (pivot ${pivot}) • Header ${header} / ${target}',
+                          {
+                            pivot: snap.pivot.toLocaleString('en-US'),
+                            header: headerStr,
+                            target: targetStr,
+                          },
+                        )
+                      : i18n(
+                          'Syncing state nodes • Header ${header} / ${target}',
+                          { header: headerStr, target: targetStr },
+                        ),
+                  }
+                }
+
+                if (target) {
                   return {
                     result: 'loading',
                     message: i18n('Syncing state (target block ${highest})', {
-                      highest: highest.toLocaleString('en-US'),
+                      highest: target.toLocaleString('en-US'),
                     }),
                   }
                 }
@@ -284,10 +397,12 @@ export const main = sdk.setupMain(async ({ effects }) =>
                   message: i18n('Execution is syncing'),
                 }
               }
+
               const latest = asObject(
                 await rpc('eth_getBlockByNumber', ['latest', false]),
               )
               const timestamp = parseHexInt(latest?.timestamp)
+              const blockNumber = parseHexInt(latest?.number)
               if (timestamp === null) throw new Error('Invalid block')
               const age = Date.now() / 1000 - timestamp
               if (age < -60 || age > 600)
@@ -297,7 +412,14 @@ export const main = sdk.setupMain(async ({ effects }) =>
                   message: i18n('Execution is ready; waiting for consensus'),
                 }
               syncProgress.clear()
-              return { result: 'success', message: i18n('Execution is synced') }
+              return {
+                result: 'success',
+                message: blockNumber
+                  ? i18n('Synced at block ${block}', {
+                      block: blockNumber.toLocaleString('en-US'),
+                    })
+                  : i18n('Execution is synced'),
+              }
             } catch {
               return {
                 result: 'failure',
@@ -451,6 +573,40 @@ export const main = sdk.setupMain(async ({ effects }) =>
                 result: 'failure',
                 message: i18n('Peer counts are unavailable'),
               }
+            }
+          },
+        },
+        requires: ['nethermind'],
+      })
+      .addHealthCheck('log-health', {
+        ready: {
+          display: i18n('Log Health'),
+          trigger: sdk.trigger.statusTrigger(15_000, {
+            starting: 5_000,
+            failure: 10_000,
+          }),
+          fn: () => {
+            const { topIssue, minorWarnings15m } = logMonitor.snapshot()
+            if (!topIssue) {
+              return {
+                result: 'success',
+                message:
+                  minorWarnings15m > 0
+                    ? i18n(
+                        'Logs look clean (${count} minor sync notice(s) in last 15m)',
+                        { count: String(minorWarnings15m) },
+                      )
+                    : i18n('Logs look clean'),
+              }
+            }
+            const message = formatLogIssue(topIssue)
+            if (topIssue.severity === 'critical') {
+              return { result: 'failure', message }
+            }
+            return {
+              result: 'loading',
+              waiting: topIssue.kind === 'consensus-silent',
+              message,
             }
           },
         },

@@ -10,7 +10,7 @@
 1. Open **Actions → Configuration → Settings** and choose where to store the blockchain: either the StartOS data drive (shown with its free and total capacity) or a shared volume you have granted read/write access to. Mainnet rolling expiry requires at least 750 GiB (1 TB+ SSD recommended); switching storage later does not move existing data.
 2. Choose your history retention policy, peer port, and maximum peer count. **Rolling expiry** is the default and keeps roughly five months of blocks and receipts. **Post-Merge** (1.3 TiB+) and **Full** (1.8 TiB+) require substantially more space, and recovering expired history later may require a fresh sync.
 3. Install and start a compatible Ethereum consensus client (such as **Nimbus**). Nethermind cannot sync on its own without a consensus client driving it.
-4. Start Nethermind and monitor **Execution Sync**, **Peer Network**, **Peers**, and **Disk Space**. Wait until both Nethermind and your consensus client report synced before relying on balances or sending transactions.
+4. Start Nethermind and monitor **Execution Sync**, **Peer Network**, **Peers**, **Log Health**, and **Disk Space**. Wait until both Nethermind and your consensus client report synced before relying on balances or sending transactions. Avoid restarting Nethermind while initial Snap Sync is in progress — interrupting flat Snap Sync forces Nethermind to clear and restart that phase from scratch.
 
 ## Peer connections and StartTunnel
 
