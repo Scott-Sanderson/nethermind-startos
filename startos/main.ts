@@ -304,16 +304,17 @@ export const main = sdk.setupMain(async ({ effects }) =>
                       return `${p.label}: ${pct} (${p.currentItems}/${p.totalItems})`
                     return `${p.label}: ${pct}`
                   })
-                  if (current !== null && current > 0 && target) {
+                  if (
+                    current !== null &&
+                    current > 0 &&
+                    highest &&
+                    highest > 0
+                  ) {
                     parts.push(
-                      `Block ${current.toLocaleString('en-US')} / ${target.toLocaleString('en-US')}`,
-                    )
-                  } else if (snap.header && target) {
-                    parts.push(
-                      `Header ${snap.header.toLocaleString('en-US')} / ${target.toLocaleString('en-US')}`,
+                      `Block ${current.toLocaleString('en-US')} / ${highest.toLocaleString('en-US')}`,
                     )
                   } else if (target) {
-                    parts.push(`Target ${target.toLocaleString('en-US')}`)
+                    parts.push(`Target block ${target.toLocaleString('en-US')}`)
                   }
                   return {
                     result: 'loading',
@@ -325,12 +326,9 @@ export const main = sdk.setupMain(async ({ effects }) =>
                   const elapsed = formatDuration(
                     Date.now() - snap.clearingDbSince,
                   )
-                  const blockCtx =
-                    snap.header && target
-                      ? ` • Header ${snap.header.toLocaleString('en-US')} / ${target.toLocaleString('en-US')}`
-                      : target
-                        ? ` • Target ${target.toLocaleString('en-US')}`
-                        : ''
+                  const blockCtx = target
+                    ? ` • Target block ${target.toLocaleString('en-US')}`
+                    : ''
                   return {
                     result: 'loading',
                     message:
@@ -363,9 +361,9 @@ export const main = sdk.setupMain(async ({ effects }) =>
                   }
                 }
 
-                if (snap.header && target) {
+                if (snap.header && snap.target) {
                   const headerStr = snap.header.toLocaleString('en-US')
-                  const targetStr = target.toLocaleString('en-US')
+                  const targetStr = snap.target.toLocaleString('en-US')
                   return {
                     result: 'loading',
                     message: snap.pivot
